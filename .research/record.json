@@ -1,0 +1,401 @@
+{
+  "schema_version": 1,
+  "prereg": {
+    "hypothesis": "「データ依存」とされる zero-cost proxy (ZC proxy) の順位付け能力は、実際の入力データの内容にほとんど依存しない。\n\n背景。ZC proxy は「単一ミニバッチの実データ」でアーキテクチャを採点すると説明され、その正当化も入力に対する応答(活性の多様性、損失勾配)に置かれている。しかしこの説明が成立しているかは定量的に検証されていない。傍証が二つある。第一に、Abdelfattah らの synflow は損失を全パラメータの積として定義するため入力データを一切使わないにもかかわらず、NAS-Bench-201 CIFAR-10 で最高の Spearman rho = 0.74 を示す。第二に、Yang らは training-free 指標の順位付け能力の大部分が #Param との相関(Kendall tau で最大 0.56)に由来し、パラメータ数を揃えると性能が崩れることを示した。両者は「ZC proxy が測っているのは入力への応答ではなくアーキテクチャ固有の量(規模・接続構造)である」という仮説を示唆する。\n\n空白。入力データ側を直接統制した検証は存在しない。Mellor らの NASWOT 論文は乱数入力のアブレーションを持つが、CIFAR-100 の 10 アーキテクチャの箱ひげ図で「傾向はほぼ変わらない」と定性的に述べるのみで、探索空間規模の順位相関としての定量化はない。\n\n主張。入力を実 CIFAR-10 ミニバッチから同形状・同統計の N(0,1) 乱数テンソルに差し替えても、真の精度との Spearman 順位相関の差 delta_rho = rho_real - rho_rand は 0.10 を超えない。proxy スコアの値自体は入力によって変化するが、真の精度との順位相関はシードを振り直した程度の差しか生まない。\n\n反証条件。jacob_cov または snip のいずれかで |delta_rho| > 0.10 となれば、その proxy は実データを実質的に利用していることになり本仮説は棄却される。",
+    "design": "介入。同一のアーキテクチャ集合・同一の初期化シードに対し、ZC proxy の入力だけを (a) CIFAR-10 の実ミニバッチ、(b) 同形状・同正規化統計の N(0,1) 乱数テンソル に差し替え、それ以外を完全に固定する。アーキテクチャの学習は一切行わない(0 エポック、forward/backward 各 1 回のみ)。\n\n探索空間と真値。NAS-Bench-201 (15,625 cell; 4 ノード 6 エッジ、演算 5 種)。評価対象は固定シード 2026 で一様抽出した 1,000 アーキテクチャ(full)。真値は NAS-Bench-201 が公表する cifar10 の eval_acc1es(テスト精度)であり、学習は参照のみで行わない。参照表 nb201_all.pickle と CIFAR-10 は RIKYU 上の /data1/rkp00041/rku00122/.airas-cache/ に既設のものを読み取り専用で使用する。\n\nproxy。jacob_cov(NASWOT 系、入力間の活性相関)、snip(損失勾配 × 重み)、synflow(全パラメータの積を損失とし入力を使わない)の 3 種。各ランは 3 つの初期化シードで proxy を計算し、その平均をアーキテクチャのスコアとする。\n\n指標。すべて外部の固定された評価層 airas-eval の nas_pre_training タスクが算出する。実験コードは指標を一切計算せず、.research/results/<run_id>/eval_inputs/nas_pre_training.json に predicted_scores(proxy スコア)と reference_scores(真の精度)を書き出すのみ。主要指標は spearman_rho、支持指標は kendall_tau / spearman_rho_top_10pct / precision_at_top_10pct。データ漏洩防止のため proxy 計算にラベルは使用しない。\n\n統制。(1) データ非依存対照: synflow は構成上入力を使わないため delta_rho は厳密に 0 でなければならず、0 でなければ実験系の欠陥を意味する。(2) シードノイズ床: 実データを保ったまま初期化シード三つ組だけを変えた複製ラン(seeds=[10,11,12])を走らせ、入力差し替えの効果をシード揺らぎと同じ尺度で比較する。(3) スコア水準の操作チェック: 乱数入力スコアを predicted、実入力スコアを reference として Spearman 相関を測り、「スコア自体は動くが精度との順位相関は動かない」のか「スコアすら動いていない(=介入が届いていない)」のかを分離する。\n\nスケール。sanity = 10 アーキ / 1 シード(CPU 可)、pilot = 200 アーキ / 3 シード、full = 1000 アーキ / 3 シード。\n\n実行環境。RIKYU (BYO Slurm, NVIDIA GB200, aarch64, partition=gpu)。Seyval compute id byo:4f616e40-bb56-45aa-95b5-38fa4d2d0b8b。依存は uv.lock で固定し、自前 Dockerfile をビルドして実行する。",
+    "runs": [
+      {
+        "run_id": "comparative-1-jacobcov-cifar10",
+        "description": "jacob_cov を実 CIFAR-10 ミニバッチ(batch 128)で計算。seeds=[0,1,2] の平均スコア。実データ参照条件。",
+        "supersedes": null
+      },
+      {
+        "run_id": "proposed-jacobcov-randinput",
+        "description": "jacob_cov を N(0,1) 乱数テンソルで計算。seeds=[0,1,2]。中心となる介入条件。",
+        "supersedes": null
+      },
+      {
+        "run_id": "comparative-2-jacobcov-cifar10rep",
+        "description": "jacob_cov を実 CIFAR-10 ミニバッチで計算、初期化シードのみ seeds=[10,11,12] に変更した複製ラン。シードノイズ床の統制。",
+        "supersedes": null
+      },
+      {
+        "run_id": "comparative-3-snip-cifar10",
+        "description": "snip を実 CIFAR-10 ミニバッチで計算。seeds=[0,1,2]。",
+        "supersedes": null
+      },
+      {
+        "run_id": "comparative-4-snip-randinput",
+        "description": "snip を N(0,1) 乱数テンソルで計算。seeds=[0,1,2]。",
+        "supersedes": null
+      },
+      {
+        "run_id": "comparative-5-synflow-cifar10",
+        "description": "synflow を実 CIFAR-10 条件で計算。synflow は構成上入力を使わないためデータ非依存対照となる。seeds=[0,1,2]。",
+        "supersedes": null
+      },
+      {
+        "run_id": "comparative-6-synflow-randinput",
+        "description": "synflow を N(0,1) 乱数条件で計算。comparative-5 と厳密に一致することが期待される対照。seeds=[0,1,2]。",
+        "supersedes": null
+      },
+      {
+        "run_id": "comparative-7-jacobcov-realvsrand",
+        "description": "スコア水準の操作チェック。predicted_scores に乱数入力での jacob_cov スコア、reference_scores に実入力での jacob_cov スコアを与え、両者の Spearman 相関を測る。",
+        "supersedes": null
+      }
+    ],
+    "claims": [
+      {
+        "id": "c1",
+        "statement": "jacob_cov の真の精度に対する順位付け能力は、入力を実 CIFAR-10 ミニバッチから N(0,1) 乱数テンソルに差し替えても実質的に変化しない。",
+        "criterion": "delta_rho_jacobcov の絶対値が 0.10 以下であれば支持。0.10 を超えれば jacob_cov は実データを実質的に利用していることになり、本主張は棄却される。",
+        "predicted_interval": "delta_rho_jacobcov = 0.00-0.05。根拠は Mellor et al. (ICML 2021) Fig.5 の乱数入力アブレーション(10 アーキテクチャの箱ひげ図で傾向不変)と、Yang et al. (WACV 2023) が示した training-free 指標の #Param 依存(Kendall tau 最大 0.56)。参考として rho_jacobcov_real は文献値 0.73 前後を予測する。",
+        "run_ids": [
+          "comparative-1-jacobcov-cifar10",
+          "proposed-jacobcov-randinput"
+        ],
+        "value_keys": [
+          "delta_rho_jacobcov",
+          "rho_jacobcov_real",
+          "rho_jacobcov_rand"
+        ],
+        "supersedes": null
+      },
+      {
+        "id": "c2",
+        "statement": "snip の真の精度に対する順位付け能力も、入力を乱数テンソルに差し替えて実質的に変化しない。",
+        "criterion": "delta_rho_snip の絶対値が 0.10 以下であれば支持。0.10 を超えれば棄却。",
+        "predicted_interval": "delta_rho_snip = 0.00-0.08。snip は損失勾配を経由するため jacob_cov より入力依存が強い可能性があり、c1 より広い区間を置く。参考として rho_snip_real は文献値 0.58 前後を予測する。",
+        "run_ids": [
+          "comparative-3-snip-cifar10",
+          "comparative-4-snip-randinput"
+        ],
+        "value_keys": [
+          "delta_rho_snip",
+          "rho_snip_real",
+          "rho_snip_rand"
+        ],
+        "supersedes": null
+      },
+      {
+        "id": "c3",
+        "statement": "synflow は構成上入力データを使わないため、入力条件を変えても順位相関は厳密に一致する(データ非依存対照)。",
+        "criterion": "delta_rho_synflow の絶対値が 0.001 以下であれば実験系は健全。これを超える場合、入力以外の要因が条件間で漏れていることを意味し、c1 と c2 の解釈は保留される。",
+        "predicted_interval": "delta_rho_synflow = 0.000-0.001(理論上は厳密に 0。浮動小数点の非決定性のみを許容する)。根拠は Abdelfattah et al. (ICLR 2021) 3.2.1 節: synflow の損失は全パラメータの積であり、データを必要としない。",
+        "run_ids": [
+          "comparative-5-synflow-cifar10",
+          "comparative-6-synflow-randinput"
+        ],
+        "value_keys": [
+          "delta_rho_synflow",
+          "rho_synflow_real",
+          "rho_synflow_rand"
+        ],
+        "supersedes": null
+      },
+      {
+        "id": "c4",
+        "statement": "入力を実データから乱数に差し替えることの効果は、初期化シードを振り直すことの効果を超えない。",
+        "criterion": "delta_rho_jacobcov の絶対値が |delta_rho_seed| + 0.05 以下であれば支持。これを超えれば、入力差し替えはシード揺らぎでは説明できない固有の効果を持つことになり棄却される。",
+        "predicted_interval": "|delta_rho_seed| = 0.00-0.05。1000 アーキテクチャ × 3 シード平均のもとでのシード揺らぎとして見積もった区間であり、事前の文献値はない。",
+        "run_ids": [
+          "comparative-1-jacobcov-cifar10",
+          "comparative-2-jacobcov-cifar10rep",
+          "proposed-jacobcov-randinput"
+        ],
+        "value_keys": [
+          "delta_rho_seed",
+          "delta_rho_jacobcov",
+          "rho_jacobcov_rep"
+        ],
+        "supersedes": null
+      },
+      {
+        "id": "c5",
+        "statement": "入力の差し替えは jacob_cov のスコア値そのものには実際に到達しており、順位相関が変化しないことはスコアが動いていないことの帰結ではない。",
+        "criterion": "score_agreement_jacobcov(乱数入力スコアと実入力スコアの Spearman 相関)が 0.999 未満であれば、介入はスコアに到達している。0.999 以上なら実験系が入力を差し替えていない疑いが強く、c1 の解釈は無効となる。",
+        "predicted_interval": "score_agreement_jacobcov = 0.60-0.95。スコアは入力で動くが順位情報は大きく保たれるという想定に基づく区間で、事前の文献値はない。",
+        "run_ids": [
+          "comparative-7-jacobcov-realvsrand"
+        ],
+        "value_keys": [
+          "score_agreement_jacobcov"
+        ],
+        "supersedes": null
+      }
+    ],
+    "values": [
+      {
+        "key": "rho_jacobcov_real",
+        "op": "value",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho_jacobcov_rand",
+        "op": "value",
+        "refs": [
+          "proposed-jacobcov-randinput.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "delta_rho_jacobcov",
+        "op": "diff",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.spearman_rho",
+          "proposed-jacobcov-randinput.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho_jacobcov_rep",
+        "op": "value",
+        "refs": [
+          "comparative-2-jacobcov-cifar10rep.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "delta_rho_seed",
+        "op": "diff",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.spearman_rho",
+          "comparative-2-jacobcov-cifar10rep.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho_snip_real",
+        "op": "value",
+        "refs": [
+          "comparative-3-snip-cifar10.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho_snip_rand",
+        "op": "value",
+        "refs": [
+          "comparative-4-snip-randinput.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "delta_rho_snip",
+        "op": "diff",
+        "refs": [
+          "comparative-3-snip-cifar10.spearman_rho",
+          "comparative-4-snip-randinput.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho_synflow_real",
+        "op": "value",
+        "refs": [
+          "comparative-5-synflow-cifar10.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho_synflow_rand",
+        "op": "value",
+        "refs": [
+          "comparative-6-synflow-randinput.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "delta_rho_synflow",
+        "op": "diff",
+        "refs": [
+          "comparative-5-synflow-cifar10.spearman_rho",
+          "comparative-6-synflow-randinput.spearman_rho"
+        ],
+        "round": 4,
+        "supersedes": null
+      },
+      {
+        "key": "score_agreement_jacobcov",
+        "op": "value",
+        "refs": [
+          "comparative-7-jacobcov-realvsrand.spearman_rho"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "tau_jacobcov_real",
+        "op": "value",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.kendall_tau"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "tau_jacobcov_rand",
+        "op": "value",
+        "refs": [
+          "proposed-jacobcov-randinput.kendall_tau"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "delta_tau_jacobcov",
+        "op": "diff",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.kendall_tau",
+          "proposed-jacobcov-randinput.kendall_tau"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho10_jacobcov_real",
+        "op": "value",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.spearman_rho_top_10pct"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho10_jacobcov_rand",
+        "op": "value",
+        "refs": [
+          "proposed-jacobcov-randinput.spearman_rho_top_10pct"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "delta_rho10_jacobcov",
+        "op": "diff",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.spearman_rho_top_10pct",
+          "proposed-jacobcov-randinput.spearman_rho_top_10pct"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "prec10_jacobcov_real",
+        "op": "value",
+        "refs": [
+          "comparative-1-jacobcov-cifar10.precision_at_top_10pct"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "prec10_jacobcov_rand",
+        "op": "value",
+        "refs": [
+          "proposed-jacobcov-randinput.precision_at_top_10pct"
+        ],
+        "round": 3,
+        "supersedes": null
+      },
+      {
+        "key": "rho_snip_rep_unused",
+        "op": "value",
+        "refs": [
+          "comparative-3-snip-cifar10.kendall_tau"
+        ],
+        "round": 3,
+        "supersedes": null
+      }
+    ],
+    "tables": [
+      {
+        "key": "zc_summary",
+        "caption": "NAS-Bench-201 (CIFAR-10, 1000 アーキテクチャ) 上の zero-cost proxy と真のテスト精度の順位相関。入力条件は実 CIFAR-10 ミニバッチ (cifar10) と N(0,1) 乱数テンソル (randinput)。学習は一切行っていない。",
+        "label": "tab:zc_summary",
+        "columns": [
+          {
+            "header": "Spearman $\\rho$",
+            "ref_path": "spearman_rho",
+            "round": 3
+          },
+          {
+            "header": "Kendall $\\tau$",
+            "ref_path": "kendall_tau",
+            "round": 3
+          },
+          {
+            "header": "$\\rho$ (top 10\\%)",
+            "ref_path": "spearman_rho_top_10pct",
+            "round": 3
+          },
+          {
+            "header": "P@top10\\%",
+            "ref_path": "precision_at_top_10pct",
+            "round": 3
+          }
+        ],
+        "rows": [
+          {
+            "run_id": "comparative-1-jacobcov-cifar10",
+            "label": "jacob\\_cov / cifar10"
+          },
+          {
+            "run_id": "proposed-jacobcov-randinput",
+            "label": "jacob\\_cov / randinput"
+          },
+          {
+            "run_id": "comparative-2-jacobcov-cifar10rep",
+            "label": "jacob\\_cov / cifar10 (seed rep.)"
+          },
+          {
+            "run_id": "comparative-3-snip-cifar10",
+            "label": "snip / cifar10"
+          },
+          {
+            "run_id": "comparative-4-snip-randinput",
+            "label": "snip / randinput"
+          },
+          {
+            "run_id": "comparative-5-synflow-cifar10",
+            "label": "synflow / cifar10"
+          },
+          {
+            "run_id": "comparative-6-synflow-randinput",
+            "label": "synflow / randinput"
+          }
+        ],
+        "supersedes": null
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "真値は NAS-Bench-201 の公表テスト精度(cifar10 eval_acc1es)を参照するのみで、アーキテクチャの学習は一切行わない(0 エポック)。",
+      "指標は airas-eval 0.10.0 の nas_pre_training タスクが算出し、実験コードは指標を計算しない。experiment code は predicted_scores と reference_scores を書き出すだけである。",
+      "データセット(CIFAR-10)と参照表(nb201_all.pickle)は RIKYU の /data1/rkp00041/rku00122/.airas-cache/ に既設のものを読み取り専用で使用する。計算ノードからは当該ディレクトリは read-only でバインドされる。",
+      "アーキテクチャ抽出は固定シード 2026 で 1 度だけ行い、全ランで同一の 1000 アーキテクチャ集合を使う。条件間で比較可能にするための前提である。",
+      "proxy 計算にラベルは一切使用しない(データ漏洩防止)。"
+    ]
+  },
+  "results": {
+    "runs": [],
+    "values": [],
+    "claim_status": [],
+    "charts": [],
+    "link_base": null
+  }
+}
