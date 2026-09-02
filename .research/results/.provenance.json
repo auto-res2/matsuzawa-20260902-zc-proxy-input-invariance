@@ -1,0 +1,40 @@
+{
+  "dirs": {
+    "comparative-1-jacobcov-cifar10": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "comparative-2-jacobcov-cifar10rep": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "comparative-3-snip-cifar10": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "comparative-4-snip-randinput": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "comparative-5-synflow-cifar10": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "comparative-6-synflow-randinput": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "comparative-7-jacobcov-realvsrand": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "comparison": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    },
+    "proposed-jacobcov-randinput": {
+      "execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+      "commit_hash": "1f837e97fce546a66790283cd533d16413c2f04b"
+    }
+  }
+}

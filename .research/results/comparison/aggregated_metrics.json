@@ -1,0 +1,104 @@
+{
+ "best_baseline": {
+  "run_id": "comparative-7-jacobcov-realvsrand",
+  "spearman_rho": 0.9262789909195486
+ },
+ "best_proposed": {
+  "run_id": "proposed-jacobcov-randinput",
+  "spearman_rho": 0.6041524875311532
+ },
+ "figures": [
+  "comparative-1-jacobcov-cifar10/scatter.pdf",
+  "comparative-2-jacobcov-cifar10rep/scatter.pdf",
+  "comparative-3-snip-cifar10/scatter.pdf",
+  "comparative-4-snip-randinput/scatter.pdf",
+  "comparative-5-synflow-cifar10/scatter.pdf",
+  "comparative-6-synflow-randinput/scatter.pdf",
+  "comparative-7-jacobcov-realvsrand/scatter.pdf",
+  "proposed-jacobcov-randinput/scatter.pdf",
+  "comparison/best_true_rank_in_top_10.pdf",
+  "comparison/kendall_tau.pdf",
+  "comparison/kendall_tau_top_10pct.pdf",
+  "comparison/precision_at_top_10pct.pdf",
+  "comparison/selection_regret_at_1.pdf",
+  "comparison/spearman_rho.pdf",
+  "comparison/spearman_rho_top_10pct.pdf"
+ ],
+ "gap": -0.3221265033883953,
+ "metrics": {
+  "comparative-1-jacobcov-cifar10": {
+   "best_true_rank_in_top_10": 78.0,
+   "kendall_tau": 0.5551229915907122,
+   "kendall_tau_top_10pct": 0.2545187058253443,
+   "precision_at_top_10pct": 0.21,
+   "selection_regret_at_1": 4.200000000000003,
+   "spearman_rho": 0.7146192705607968,
+   "spearman_rho_top_10pct": 0.3696168258661251
+  },
+  "comparative-2-jacobcov-cifar10rep": {
+   "best_true_rank_in_top_10": 125.0,
+   "kendall_tau": 0.5539967253723898,
+   "kendall_tau_top_10pct": 0.2224501607532515,
+   "precision_at_top_10pct": 0.11,
+   "selection_regret_at_1": 1.6500000000000057,
+   "spearman_rho": 0.7126916833914497,
+   "spearman_rho_top_10pct": 0.3171976757952517
+  },
+  "comparative-3-snip-cifar10": {
+   "best_true_rank_in_top_10": 35.0,
+   "kendall_tau": 0.43480206655424697,
+   "kendall_tau_top_10pct": -0.12056149223305784,
+   "precision_at_top_10pct": 0.39,
+   "selection_regret_at_1": 2.8200000000000074,
+   "spearman_rho": 0.5979484139040461,
+   "spearman_rho_top_10pct": -0.22040170002893095
+  },
+  "comparative-4-snip-randinput": {
+   "best_true_rank_in_top_10": 35.0,
+   "kendall_tau": 0.47234014928726953,
+   "kendall_tau_top_10pct": -0.08524549955872776,
+   "precision_at_top_10pct": 0.36,
+   "selection_regret_at_1": 2.8200000000000074,
+   "spearman_rho": 0.6457440859124765,
+   "spearman_rho_top_10pct": -0.1684386817883056
+  },
+  "comparative-5-synflow-cifar10": {
+   "best_true_rank_in_top_10": 16.0,
+   "kendall_tau": 0.5955824412417791,
+   "kendall_tau_top_10pct": 0.20841105857077544,
+   "precision_at_top_10pct": 0.51,
+   "selection_regret_at_1": 0.8700000000000045,
+   "spearman_rho": 0.7935009281956833,
+   "spearman_rho_top_10pct": 0.30599169739286847
+  },
+  "comparative-6-synflow-randinput": {
+   "best_true_rank_in_top_10": 16.0,
+   "kendall_tau": 0.5955824412417791,
+   "kendall_tau_top_10pct": 0.20841105857077544,
+   "precision_at_top_10pct": 0.51,
+   "selection_regret_at_1": 0.8700000000000045,
+   "spearman_rho": 0.7935009281956833,
+   "spearman_rho_top_10pct": 0.30599169739286847
+  },
+  "comparative-7-jacobcov-realvsrand": {
+   "best_true_rank_in_top_10": 1.0,
+   "kendall_tau": 0.7883265333918189,
+   "kendall_tau_top_10pct": 0.40767676767676775,
+   "precision_at_top_10pct": 0.55,
+   "selection_regret_at_1": 0.13048963095633326,
+   "spearman_rho": 0.9262789909195486,
+   "spearman_rho_top_10pct": 0.5777257725772575
+  },
+  "proposed-jacobcov-randinput": {
+   "best_true_rank_in_top_10": 196.0,
+   "kendall_tau": 0.4531818706056097,
+   "kendall_tau_top_10pct": 0.17049099911745552,
+   "precision_at_top_10pct": 0.06,
+   "selection_regret_at_1": 4.050000000000011,
+   "spearman_rho": 0.6041524875311532,
+   "spearman_rho_top_10pct": 0.243232298479767
+  }
+ },
+ "note": "All metrics are produced by airas-eval (task nas_pre_training) and are copied here verbatim. This script computes no metric of its own.",
+ "primary_metric": "spearman_rho"
+}
