@@ -254,8 +254,124 @@
       }
      ]
     },
-    "run_stage": "full"
+    "run_stage": "full",
+    "experimental_results": {
+     "metrics_data": {
+      "comparative-1-jacobcov-cifar10": {
+       "best_true_rank_in_top_10": 78.0,
+       "kendall_tau": 0.5551229915907122,
+       "kendall_tau_top_10pct": 0.2545187058253443,
+       "precision_at_top_10pct": 0.21,
+       "selection_regret_at_1": 4.200000000000003,
+       "spearman_rho": 0.7146192705607968,
+       "spearman_rho_top_10pct": 0.3696168258661251
+      },
+      "proposed-jacobcov-randinput": {
+       "best_true_rank_in_top_10": 196.0,
+       "kendall_tau": 0.4531818706056097,
+       "kendall_tau_top_10pct": 0.17049099911745552,
+       "precision_at_top_10pct": 0.06,
+       "selection_regret_at_1": 4.050000000000011,
+       "spearman_rho": 0.6041524875311532,
+       "spearman_rho_top_10pct": 0.243232298479767
+      },
+      "comparative-2-jacobcov-cifar10rep": {
+       "best_true_rank_in_top_10": 125.0,
+       "kendall_tau": 0.5539967253723898,
+       "kendall_tau_top_10pct": 0.2224501607532515,
+       "precision_at_top_10pct": 0.11,
+       "selection_regret_at_1": 1.6500000000000057,
+       "spearman_rho": 0.7126916833914497,
+       "spearman_rho_top_10pct": 0.3171976757952517
+      },
+      "comparative-3-snip-cifar10": {
+       "best_true_rank_in_top_10": 35.0,
+       "kendall_tau": 0.43480206655424697,
+       "kendall_tau_top_10pct": -0.12056149223305784,
+       "precision_at_top_10pct": 0.39,
+       "selection_regret_at_1": 2.8200000000000074,
+       "spearman_rho": 0.5979484139040461,
+       "spearman_rho_top_10pct": -0.22040170002893095
+      },
+      "comparative-4-snip-randinput": {
+       "best_true_rank_in_top_10": 35.0,
+       "kendall_tau": 0.47234014928726953,
+       "kendall_tau_top_10pct": -0.08524549955872776,
+       "precision_at_top_10pct": 0.36,
+       "selection_regret_at_1": 2.8200000000000074,
+       "spearman_rho": 0.6457440859124765,
+       "spearman_rho_top_10pct": -0.1684386817883056
+      },
+      "comparative-5-synflow-cifar10": {
+       "best_true_rank_in_top_10": 16.0,
+       "kendall_tau": 0.5955824412417791,
+       "kendall_tau_top_10pct": 0.20841105857077544,
+       "precision_at_top_10pct": 0.51,
+       "selection_regret_at_1": 0.8700000000000045,
+       "spearman_rho": 0.7935009281956833,
+       "spearman_rho_top_10pct": 0.30599169739286847
+      },
+      "comparative-6-synflow-randinput": {
+       "best_true_rank_in_top_10": 16.0,
+       "kendall_tau": 0.5955824412417791,
+       "kendall_tau_top_10pct": 0.20841105857077544,
+       "precision_at_top_10pct": 0.51,
+       "selection_regret_at_1": 0.8700000000000045,
+       "spearman_rho": 0.7935009281956833,
+       "spearman_rho_top_10pct": 0.30599169739286847
+      },
+      "comparative-7-jacobcov-realvsrand": {
+       "best_true_rank_in_top_10": 1.0,
+       "kendall_tau": 0.7883265333918189,
+       "kendall_tau_top_10pct": 0.40767676767676775,
+       "precision_at_top_10pct": 0.55,
+       "selection_regret_at_1": 0.13048963095633326,
+       "spearman_rho": 0.9262789909195486,
+       "spearman_rho_top_10pct": 0.5777257725772575
+      }
+     },
+     "result_figures": [
+      "chart/delta_rho.png",
+      "comparative-1-jacobcov-cifar10/scatter.pdf",
+      "comparative-2-jacobcov-cifar10rep/scatter.pdf",
+      "comparative-3-snip-cifar10/scatter.pdf",
+      "comparative-4-snip-randinput/scatter.pdf",
+      "comparative-5-synflow-cifar10/scatter.pdf",
+      "comparative-6-synflow-randinput/scatter.pdf",
+      "comparative-7-jacobcov-realvsrand/scatter.pdf",
+      "proposed-jacobcov-randinput/scatter.pdf"
+     ]
+    },
+    "experimental_analysis": {
+     "analysis_report": "事前登録した 5 主張のうち、C1(中心仮説)と C4 は判定基準を満たさず棄却された。C2・C3・C5 は支持された。主張・判定基準・予測区間はいずれも実験後に変更していない。\n\n【主要な結果】\n- C1 棄却: jacob_cov の delta_rho = 0.110 は判定基準 0.10 を上回った。予測区間 0.00-0.05 からも外れており、予測は二重に外した。rho_real = 0.715 は文献値 0.73 に近く、実装は標準的な jacob_cov を再現している。\n- C2 支持: snip の delta_rho = -0.048。符号が負であり、乱数入力の方がわずかに良い。これは予測していなかった。\n- C3 支持: synflow の delta_rho = 0.0000。4 指標すべてで 2 条件が完全一致し、アーキテクチャ抽出・採点・評価の経路が条件間で差を生んでいないことが確認された。\n- C4 棄却: シードのみ変えた複製ランの delta_rho_seed = 0.002 に対し、入力差し替えの効果 0.110 は桁違いに大きい。入力効果はノイズでは説明できない。\n- C5 支持: 実入力スコアと乱数入力スコアの Spearman 相関 0.926 < 0.999。介入はスコアに到達しており、C1 の結果は「入力が差し替わっていなかった」ことの帰結ではない。\n\n【解釈】\n中心仮説「ZC プロキシの順位付け能力は入力データの内容に依存しない」は一様には成り立たない。jacob_cov では成り立たず、snip では成り立った。正しい問いは「どのプロキシがどれだけ入力を見ているか」である。\n\n設計から見れば整合的である。jacob_cov は定義上ミニバッチ内の異なる入力が誘導するヤコビアンの相関であり、入力集合の構造そのものを測る。自然画像は相互に相関を持つが独立な N(0,1) テンソルは持たないため、差が出る方が自然である。一方 snip の |dL/dtheta ⊙ theta| は勾配の大きさの総和であり、入力内容よりネットワークの規模と接続構造に支配される。\n\n最も重要な観察は、本研究で最高の順位相関 0.794 を示した synflow が入力データを一度も参照しないことである。実データを使う jacob_cov の 0.715 を上回る。「入力への応答を測っているから効く」という説明は、少なくとも本探索空間ではプロキシの性能を説明していない。これは Yang ら (WACV 2023) の #Param 依存の指摘と整合する。\n\n【留保】\nC1 の実測 0.110 は判定基準 0.10 をわずかに超えたにすぎず、基準が 0.15 なら結論は逆になっていた。この際どさは記録されるべきである。ただし C4 が示すとおり効果はシードノイズ(0.002)より明確に大きく、「効果は実在するが小さい」というのが妥当な読み方である。上位 10% 系の支持指標はシード複製ランでも大きく動いており、主要指標ほどの重みでは読めない。\n\n【限界】\n単一の探索空間(NAS-Bench-201)、単一データセット(CIFAR-10)、3 プロキシ、1000 アーキテクチャの部分集合に限られる。乱数入力は N(0,1) のみで、自然画像統計を部分的に保つ入力との比較は行っていない。また snip の損失はラベルを使わない sum(output) を用いており(両条件で同一に保つための事前登録済みの選択)、ラベル付き交差エントロピーを使う標準実装とは異なる。"
+    },
+    "decision": {
+     "action": "complete",
+     "reasoning": "事前登録した 5 主張すべてが宣言済みコミットで実行されたランにより検証され、判定が確定した。C1 と C4 は棄却、C2・C3・C5 は支持。追加ランで結論が変わる性質のものではなく、探索空間やデータセットの拡張は本研究の範囲外(限界として明記)。"
+    }
    }
   ]
+ },
+ "additional_data": {
+  "freeze_commit": "c1f5389eb54b107d1bc69d50c8658b2b98fc9d43",
+  "experiment_commit": "1f837e97fce546a66790283cd533d16413c2f04b",
+  "metrics_execution_id": "73f5f23c-7713-448d-853a-cd7d9c7b0eb1",
+  "scoring_run_ids": {
+   "comparative-1-jacobcov-cifar10": "8e6b95a3-612a-45dd-ac38-a7dedb79c46d",
+   "proposed-jacobcov-randinput": "aa2036f4-5f02-4299-88ac-d7a7d880b0dd",
+   "comparative-2-jacobcov-cifar10rep": "d01911ee-9bdf-45be-aab3-0804714b73df",
+   "comparative-3-snip-cifar10": "903404d7-cac9-4cfc-9278-f8a306df240c",
+   "comparative-4-snip-randinput": "b3bd8a92-ccf9-45ae-bb67-c41df9ed2093",
+   "comparative-5-synflow-cifar10": "f237bf42-2c31-49cc-b449-0ec28d3667f7",
+   "comparative-6-synflow-randinput": "6ab37e4d-0084-4d81-ae2c-b81143528b7f",
+   "comparative-7-jacobcov-realvsrand": "e3891102-ce1d-40b3-b32f-5ded51c753f6"
+  },
+  "claim_outcomes": {
+   "c1": "refuted",
+   "c2": "supported",
+   "c3": "supported",
+   "c4": "refuted",
+   "c5": "supported"
+  }
  }
 }
